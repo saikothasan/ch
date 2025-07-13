@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Chat - Firebase & Google Auth</title>
+    <title>Pro Chat - Fully Responsive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,26 +16,33 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         #messages { scroll-behavior: smooth; }
+        /* Add a subtle overlay when the mobile sidebar is open */
+        .sidebar-open #chatView > div:not(#sidebar) {
+            filter: blur(2px) brightness(0.9);
+        }
     </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 antialiased">
 
-    <div id="loginView" class="flex items-center justify-center h-screen">
-        <div class="text-center bg-white p-12 rounded-xl shadow-2xl max-w-md mx-auto">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Welcome to Pro Chat</h1>
+    <div id="loginView" class="flex items-center justify-center h-screen p-4">
+        <div class="text-center bg-white p-8 sm:p-12 rounded-xl shadow-2xl max-w-md mx-auto">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Welcome to Pro Chat</h1>
             <p class="text-gray-600 mb-8">Sign in to start the conversation.</p>
-            <button id="loginButton" class="flex items-center justify-center w-full bg-white border border-gray-300 rounded-lg px-6 py-3 text-lg text-gray-700 font-medium hover:bg-gray-50 shadow-sm transition-colors">
+            <button id="loginButton" class="flex items-center justify-center w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-md sm:text-lg text-gray-700 font-medium hover:bg-gray-50 shadow-sm transition-colors">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" class="w-6 h-6 mr-4"/>
                 Sign in with Google
             </button>
         </div>
     </div>
 
-    <div id="chatView" class="hidden h-screen w-full flex">
-        <div class="w-1/4 bg-white border-r border-gray-200 flex flex-col">
-            <div class="p-4 border-b border-gray-200">
+    <div id="chatView" class="hidden h-screen w-full relative md:flex">
+        <div id="sidebar" class="w-4/5 sm:w-3/5 md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col fixed md:static inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-gray-800">Online Users</h2>
+                <button id="closeSidebarButton" class="md:hidden text-gray-600 hover:text-gray-900">
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             <div id="onlineUsers" class="flex-1 overflow-y-auto p-4 space-y-3">
                 </div>
@@ -46,19 +53,22 @@
             </div>
         </div>
 
-        <div class="w-3/4 flex flex-col">
+        <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col transition-all duration-300 ease-in-out">
             <div class="p-4 border-b border-gray-200 bg-white flex justify-between items-center shadow-sm">
-                 <h1 class="text-2xl font-bold text-gray-800">Global Chat Room</h1>
-                 <div class="text-sm text-gray-500" id="typingIndicator"></div>
+                 <button id="openSidebarButton" class="md:hidden text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                 </button>
+                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Global Chat</h1>
+                 <div class="text-sm text-gray-500 text-right" id="typingIndicator"></div>
             </div>
 
-            <div id="messages" class="flex-1 p-6 overflow-y-auto bg-gray-50">
+            <div id="messages" class="flex-1 p-4 sm:p-6 overflow-y-auto bg-gray-50">
                 </div>
 
             <div class="p-4 bg-white border-t border-gray-200">
                 <form id="messageForm" class="flex items-center">
                     <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" class="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
-                    <button type="submit" class="ml-4 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <button type="submit" class="ml-4 bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                         Send
                     </button>
                 </form>
@@ -67,182 +77,21 @@
     </div>
 
     <script>
-        // --- START: FIREBASE CONFIGURATION ---
-        // ⚠️ PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDz5xhqoVjsRukGaCzluPPuvErAs1f4rP4",
-  authDomain: "njoonchat.firebaseapp.com",
-  projectId: "njoonchat",
-  storageBucket: "njoonchat.firebasestorage.app",
-  messagingSenderId: "391865621829",
-  appId: "1:391865621829:web:308f9bd34153e9a214b22c",
-  measurementId: "G-TE75CQV7V6"
-};
-        // --- END: FIREBASE CONFIGURATION ---
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const firestore = firebase.firestore();
-        const database = firebase.database(); // Realtime Database for presence
-
-        // Collections
-        const messagesCollection = firestore.collection('messages');
-        const presenceCollection = firestore.collection('presence');
-        const typingCollection = database.ref('typing'); // Use RTDB for high-frequency updates
-
-        // DOM Elements
-        const loginView = document.getElementById('loginView');
-        const chatView = document.getElementById('chatView');
-        const loginButton = document.getElementById('loginButton');
-        const signOutButton = document.getElementById('signOutButton');
-        const messageForm = document.getElementById('messageForm');
-        const messageInput = document.getElementById('messageInput');
-        const messagesContainer = document.getElementById('messages');
-        const onlineUsersContainer = document.getElementById('onlineUsers');
-        const typingIndicator = document.getElementById('typingIndicator');
-
-        let currentUser;
-        let typingTimeout;
-
-        // --- AUTHENTICATION ---
-        loginButton.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        signOutButton.onclick = () => auth.signOut();
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                loginView.style.display = 'none';
-                chatView.style.display = 'flex';
-                setupPresence(user);
-                listenForMessages();
-                listenForPresence();
-                listenForTyping();
-            } else {
-                currentUser = null;
-                loginView.style.display = 'flex';
-                chatView.style.display = 'none';
-                if(database) database.ref('.info/connected').off(); // Detach presence listeners
-            }
-        });
-        
-        // --- REAL-TIME PRESENCE ---
-        function setupPresence(user) {
-            const myPresenceRef = presenceCollection.doc(user.uid);
-            const userStatusDatabaseRef = database.ref('/status/' + user.uid);
-
-            const isOfflineForFirestore = {
-                state: 'offline',
-                last_changed: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            const isOnlineForFirestore = {
-                state: 'online',
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                last_changed: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            
-            database.ref('.info/connected').on('value', (snapshot) => {
-                if (snapshot.val() === false) {
-                    myPresenceRef.set(isOfflineForFirestore);
-                    return;
-                };
-
-                userStatusDatabaseRef.onDisconnect().set({ state: 'offline' }).then(() => {
-                    userStatusDatabaseRef.set({ state: 'online' });
-                    myPresenceRef.set(isOnlineForFirestore);
-                });
-            });
-        }
-        
-        function listenForPresence() {
-            presenceCollection.where('state', '==', 'online').onSnapshot(snapshot => {
-                onlineUsersContainer.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const userDiv = document.createElement('div');
-                    userDiv.className = 'flex items-center space-x-3';
-                    userDiv.innerHTML = `
-                        <img src="${user.photoURL}" alt="${user.displayName}" class="w-10 h-10 rounded-full">
-                        <span class="font-medium text-gray-700">${user.displayName}</span>
-                    `;
-                    onlineUsersContainer.appendChild(userDiv);
-                });
-            });
-        }
-
-        // --- MESSAGING ---
-        function listenForMessages() {
-            messagesCollection.orderBy('createdAt').limitToLast(50).onSnapshot(snapshot => {
-                messagesContainer.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const msg = doc.data();
-                    const isSelf = msg.uid === currentUser.uid;
-                    const messageElement = document.createElement('div');
-                    messageElement.className = `flex items-start gap-3 my-4 ${isSelf ? 'flex-row-reverse' : ''}`;
-                    messageElement.innerHTML = `
-                        <img src="${msg.photoURL}" alt="${msg.displayName}" class="w-10 h-10 rounded-full">
-                        <div class="flex flex-col ${isSelf ? 'items-end' : 'items-start'}">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm">${msg.displayName}</span>
-                                <span class="text-xs text-gray-500">${msg.createdAt?.toDate().toLocaleTimeString() || ''}</span>
+    const firebaseConfig={apiKey:"AIzaSyDz5xhqoVjsRukGaCzluPPuvErAs1f4rP4",authDomain:"njoonchat.firebaseapp.com",projectId:"njoonchat",storageBucket:"njoonchat.firebasestorage.app",messagingSenderId:"391865621829",appId:"1:391865621829:web:308f9bd34153e9a214b22c",measurementId:"G-TE75CQV7V6"};firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),firestore=firebase.firestore(),database=firebase.database(),messagesCollection=firestore.collection("messages"),presenceCollection=firestore.collection("presence"),typingRef=database.ref("typing"),loginView=document.getElementById("loginView"),chatView=document.getElementById("chatView"),loginButton=document.getElementById("loginButton"),signOutButton=document.getElementById("signOutButton"),messageForm=document.getElementById("messageForm"),messageInput=document.getElementById("messageInput"),messagesContainer=document.getElementById("messages"),onlineUsersContainer=document.getElementById("onlineUsers"),typingIndicator=document.getElementById("typingIndicator"),sidebar=document.getElementById("sidebar"),openSidebarButton=document.getElementById("openSidebarButton"),closeSidebarButton=document.getElementById("closeSidebarButton");let currentUser,typingTimeout;const toggleSidebar=e=>{e?(sidebar.classList.remove("-translate-x-full"),document.body.classList.add("sidebar-open")):(sidebar.classList.add("-translate-x-full"),document.body.classList.remove("sidebar-open"))};function setupPresence(e){let t=presenceCollection.doc(e.uid),s=database.ref("/status/"+e.uid),n={state:"offline",last_changed:firebase.firestore.FieldValue.serverTimestamp()},a={state:"online",displayName:e.displayName,photoURL:e.photoURL,last_changed:firebase.firestore.FieldValue.serverTimestamp()};database.ref(".info/connected").on("value",e=>{if(!1===e.val()){t.set(n);return}s.onDisconnect().set({state:"offline"}).then(()=>{s.set({state:"online"}),t.set(a)})})}function listenForPresence(){presenceCollection.where("state","==","online").onSnapshot(e=>{onlineUsersContainer.innerHTML="",e.forEach(e=>{let t=e.data(),s=document.createElement("div");s.className="flex items-center space-x-3 cursor-pointer p-2 rounded-md hover:bg-gray-100",s.innerHTML=`
+                        <img src="${t.photoURL}" alt="${t.displayName}" class="w-10 h-10 rounded-full">
+                        <span class="font-medium text-gray-700">${t.displayName}</span>
+                    `,onlineUsersContainer.appendChild(s)})})}function listenForMessages(){messagesCollection.orderBy("createdAt").limitToLast(50).onSnapshot(e=>{messagesContainer.innerHTML="",e.docChanges().forEach(e=>{if("added"===e.type){let t=e.doc.data(),s=t.uid===currentUser.uid,n=document.createElement("div");n.className=`flex items-start gap-3 my-4 ${s?"flex-row-reverse":""}`,n.innerHTML=`
+                            <img src="${t.photoURL}" alt="${t.displayName}" class="w-10 h-10 rounded-full">
+                            <div class="flex flex-col ${s?"items-end":"items-start"}">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-sm">${s?"You":t.displayName}</span>
+                                    <span class="text-xs text-gray-500">${t.createdAt?.toDate().toLocaleTimeString()||""}</span>
+                                </div>
+                                <div class="mt-1 px-4 py-2 rounded-lg shadow max-w-xs sm:max-w-md ${s?"bg-blue-500 text-white":"bg-white text-gray-800"}">
+                                    <p class="break-words">${t.text}</p>
+                                </div>
                             </div>
-                            <div class="mt-1 px-4 py-2 rounded-lg shadow ${isSelf ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'}">
-                                <p>${msg.text}</p>
-                            </div>
-                        </div>
-                    `;
-                    messagesContainer.appendChild(messageElement);
-                });
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            });
-        }
-
-        messageForm.addEventListener('submit', e => {
-            e.preventDefault();
-            const text = messageInput.value.trim();
-            if (text && currentUser) {
-                messagesCollection.add({
-                    text: text,
-                    uid: currentUser.uid,
-                    displayName: currentUser.displayName,
-                    photoURL: currentUser.photoURL,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                messageInput.value = '';
-                typingCollection.child(currentUser.uid).remove(); // Stop typing indicator on send
-            }
-        });
-        
-        // --- TYPING INDICATOR ---
-        messageInput.addEventListener('keyup', () => {
-            if (!currentUser) return;
-            const userTypingRef = typingCollection.child(currentUser.uid);
-
-            if (messageInput.value.trim().length > 0) {
-                userTypingRef.set(currentUser.displayName);
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => {
-                    userTypingRef.remove();
-                }, 2000); // User is considered "stopped" after 2 seconds
-            } else {
-                 userTypingRef.remove();
-            }
-        });
-
-        function listenForTyping() {
-            typingCollection.on('value', snapshot => {
-                const typingUsers = snapshot.val() || {};
-                const otherTypingUsers = Object.values(typingUsers).filter(name => name !== currentUser.displayName);
-
-                if (otherTypingUsers.length > 0) {
-                    typingIndicator.textContent = `${otherTypingUsers.join(', ')} is typing...`;
-                } else {
-                    typingIndicator.textContent = '';
-                }
-            });
-        }
+                        `,messagesContainer.appendChild(n)}}),messagesContainer.scrollTop=messagesContainer.scrollHeight})}function listenForTyping(){typingRef.on("value",e=>{let t=e.val()||{},s=Object.values(t).filter(e=>e!==currentUser.displayName);s.length>0?typingIndicator.textContent=`${s.join(", ")} is typing...`:typingIndicator.textContent=""})}openSidebarButton.onclick=()=>toggleSidebar(!0),closeSidebarButton.onclick=()=>toggleSidebar(!1),loginButton.onclick=()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider),signOutButton.onclick=()=>auth.signOut(),auth.onAuthStateChanged(e=>{e?(currentUser=e,loginView.style.display="none",chatView.style.display="flex",setupPresence(e),listenForMessages(),listenForPresence(),listenForTyping()):(currentUser=null,loginView.style.display="flex",chatView.style.display="none",toggleSidebar(!1),database&&database.ref(".info/connected").off())}),messageForm.addEventListener("submit",e=>{e.preventDefault();let t=messageInput.value.trim();t&&currentUser&&(messagesCollection.add({text:t,uid:currentUser.uid,displayName:currentUser.displayName,photoURL:currentUser.photoURL,createdAt:firebase.firestore.FieldValue.serverTimestamp()}),messageInput.value="",typingRef.child(currentUser.uid).remove())}),messageInput.addEventListener("keyup",()=>{if(!currentUser)return;let e=typingRef.child(currentUser.uid);messageInput.value.trim().length>0?(e.set(currentUser.displayName),clearTimeout(typingTimeout),typingTimeout=setTimeout(()=>e.remove(),2e3)):e.remove()});
     </script>
 </body>
 </html>
